@@ -177,6 +177,18 @@ def test_plugin_cannot_silently_replace_builtin(monkeypatch: pytest.MonkeyPatch)
     assert providers["paystack"].name == "paystack"
 
 
-def test_worker_secret_env_name_supports_plugin_names() -> None:
+def test_programmatic_registration_rejects_non_adapter() -> None:
+    with pytest.raises(TypeError, match="ProviderAdapter"):
+        registry.register_provider(object())  # type: ignore[arg-type]
+
+
+def test_programmatic_registration_name_must_match_adapter() -> None:
+    with pytest.raises(ValueError, match="does not match"):
+        registry.register_provider(AcmePayAdapter(), name="different-name")
+
+
+def test_worker_secret_env_name_supports_builtins_and_plugins() -> None:
+    assert secret_env_name("stripe") == "PAYLAB_STRIPE_WEBHOOK_SECRET"
+    assert secret_env_name("razorpay") == "PAYLAB_RAZORPAY_SECRET"
     assert secret_env_name("m-pesa") == "PAYLAB_M_PESA_SECRET"
     assert secret_env_name("acme.pay") == "PAYLAB_ACME_PAY_SECRET"

@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "paylab-dev"
-version = "0.4.0"
+version = "0.5.0.dev0"
 description = "Open-source payment reliability and chaos-testing toolkit for webhook integrations."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Olawumi Oluwafemi" }]
-keywords = ["payments", "webhooks", "testing", "chaos-engineering", "fastapi", "paystack", "stripe", "flutterwave"]
+keywords = ["payments", "webhooks", "testing", "chaos-engineering", "fastapi", "paystack", "stripe", "flutterwave", "monnify", "razorpay"]
 classifiers = ["Development Status :: 3 - Alpha", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Topic :: Software Development :: Testing"]
 dependencies = ["fastapi>=0.115,<1.0", "httpx>=0.27,<1.0", "pydantic>=2.9,<3.0", "typer>=0.12,<1.0", "uvicorn[standard]>=0.30,<1.0"]
 

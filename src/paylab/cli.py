@@ -18,6 +18,8 @@ app = typer.Typer(
 chaos_app = typer.Typer(help="Run payment reliability chaos scenarios.", no_args_is_help=True)
 app.add_typer(chaos_app, name="chaos")
 
+_PROVIDER_HELP = "Built-in or installed payment provider name"
+
 
 @app.command()
 def start(
@@ -50,7 +52,7 @@ def worker(
 
 @app.command()
 def trigger(
-    provider: Annotated[str, typer.Argument(help="paystack, stripe, or flutterwave")],
+    provider: Annotated[str, typer.Argument(help=_PROVIDER_HELP)],
     event: Annotated[str, typer.Argument(help="Provider event type")],
     target_url: Annotated[str, typer.Argument(help="Your webhook endpoint")],
     secret: Annotated[str, typer.Option("--secret", "-s", help="Webhook signing secret")],
@@ -105,7 +107,7 @@ def trigger(
 
 @app.command()
 def lifecycle(
-    provider: Annotated[str, typer.Argument(help="paystack, stripe, or flutterwave")],
+    provider: Annotated[str, typer.Argument(help=_PROVIDER_HELP)],
     target_url: Annotated[str, typer.Argument(help="Your webhook endpoint")],
     secret: Annotated[str, typer.Option("--secret", "-s", help="Webhook signing secret")],
     events: Annotated[
@@ -151,7 +153,7 @@ def lifecycle(
 
 @app.command()
 def storm(
-    provider: Annotated[str, typer.Argument(help="paystack, stripe, or flutterwave")],
+    provider: Annotated[str, typer.Argument(help=_PROVIDER_HELP)],
     event: Annotated[str, typer.Argument(help="Provider event type")],
     target_url: Annotated[str, typer.Argument(help="Your webhook endpoint")],
     secret: Annotated[str, typer.Option("--secret", "-s", help="Webhook signing secret")],
@@ -233,7 +235,7 @@ def history_command(
 
 @chaos_app.command("checkout")
 def chaos_checkout(
-    provider: Annotated[str, typer.Argument(help="paystack, stripe, or flutterwave")],
+    provider: Annotated[str, typer.Argument(help=_PROVIDER_HELP)],
     event: Annotated[str, typer.Argument(help="Provider success event type")],
     target_url: Annotated[str, typer.Argument(help="Your webhook endpoint")],
     secret: Annotated[str, typer.Option("--secret", "-s", help="Webhook signing secret")],

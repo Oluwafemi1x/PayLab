@@ -15,6 +15,7 @@ PAYSTACK_SECRET = os.getenv("PAYSTACK_SECRET", "sk_test_paylab")
 STRIPE_SECRET = os.getenv("STRIPE_SECRET", "whsec_paylab")
 FLUTTERWAVE_SECRET = os.getenv("FLUTTERWAVE_SECRET", "flw_paylab")
 MONNIFY_SECRET = os.getenv("MONNIFY_SECRET", "monnify_paylab")
+RAZORPAY_SECRET = os.getenv("RAZORPAY_SECRET", "razorpay_paylab")
 
 received_counts: defaultdict[str, int] = defaultdict(int)
 side_effect_counts: defaultdict[str, int] = defaultdict(int)
@@ -56,8 +57,12 @@ def _accepted(event_id: str | None) -> dict[str, object]:
     }
 
 
-async def _finish_delivery(request: Request) -> dict[str, object]:
-    event_id = request.headers.get("x-paylab-event-id")
+async def _finish_delivery(
+    request: Request,
+    *,
+    event_id_header: str = "x-paylab-event-id",
+) -> dict[str, object]:
+    event_id = request.headers.get(event_id_header) or request.headers.get("x-paylab-event-id")
     already_recorded = await apply_fault(request, event_id)
     if already_recorded:
         return {"accepted": True, "duplicate": False, "event_id": event_id}
@@ -122,3 +127,13 @@ async def monnify_webhook(request: Request) -> dict[str, object]:
     if not hmac.compare_digest(signature, expected):
         raise HTTPException(status_code=401, detail="Invalid Monnify signature")
     return await _finish_delivery(request)
+
+
+@app.post("/webhooks/razorpay")
+async def razorpay_webhook(request: Request) -> dict[str, object]:
+    body = await request.body()
+    signature = request.headers.get("x-razorpay-signature", "")
+    expected = hmac.new(RAZORPAY_SECRET.encode(), body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        raise HTTPException(status_code=401, detail="Invalid Razorpay signature")
+    return await _finish_delivery(request, event_id_header="x-razorpay-event-id")

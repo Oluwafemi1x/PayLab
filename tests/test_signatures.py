@@ -5,6 +5,7 @@ import hmac
 from paylab.providers.flutterwave import FlutterwaveAdapter
 from paylab.providers.monnify import MonnifyAdapter
 from paylab.providers.paystack import PaystackAdapter
+from paylab.providers.razorpay import RazorpayAdapter
 from paylab.providers.stripe import StripeAdapter
 
 
@@ -41,6 +42,14 @@ def test_monnify_signature_matches_raw_body() -> None:
     assert event.headers["monnify-signature"] == expected
 
 
+def test_razorpay_signature_matches_raw_body() -> None:
+    secret = "razorpay-webhook-secret"
+    event = RazorpayAdapter().build_event("payment.captured", secret, {})
+    expected = hmac.new(secret.encode(), event.body, hashlib.sha256).hexdigest()
+    assert event.headers["X-Razorpay-Signature"] == expected
+    assert event.headers["x-razorpay-event-id"] == event.event_id
+
+
 def test_invalid_signature_is_actually_invalid() -> None:
     secret = "correct-secret"
     event = PaystackAdapter().build_event("charge.success", secret, {}, invalid_signature=True)
@@ -55,3 +64,12 @@ def test_monnify_invalid_signature_is_actually_invalid() -> None:
     )
     correct = hmac.new(secret.encode(), event.body, hashlib.sha512).hexdigest()
     assert event.headers["monnify-signature"] != correct
+
+
+def test_razorpay_invalid_signature_is_actually_invalid() -> None:
+    secret = "correct-secret"
+    event = RazorpayAdapter().build_event(
+        "payment.captured", secret, {}, invalid_signature=True
+    )
+    correct = hmac.new(secret.encode(), event.body, hashlib.sha256).hexdigest()
+    assert event.headers["X-Razorpay-Signature"] != correct

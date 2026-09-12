@@ -8,7 +8,7 @@ branding:
 
 inputs:
   provider:
-    description: "Payment provider to simulate: paystack, stripe, or flutterwave."
+    description: "Built-in or installed payment provider name."
     required: true
   event:
     description: "Provider success event type to test."
@@ -80,7 +80,7 @@ outputs:
     description: "Absolute path to the generated JSON report."
     value: ${{ steps.gate.outputs.json_report }}
   html-report:
-    description: "Absolute path to the generated HTML report."
+    description: "Absolute path to the generated HTML reliability report."
     value: ${{ steps.gate.outputs.html_report }}
 
 runs:

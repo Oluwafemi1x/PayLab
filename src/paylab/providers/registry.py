@@ -8,6 +8,7 @@ from paylab.providers.base import ProviderAdapter
 from paylab.providers.flutterwave import FlutterwaveAdapter
 from paylab.providers.monnify import MonnifyAdapter
 from paylab.providers.paystack import PaystackAdapter
+from paylab.providers.razorpay import RazorpayAdapter
 from paylab.providers.stripe import StripeAdapter
 
 ENTRY_POINT_GROUP = "paylab.providers"
@@ -18,6 +19,7 @@ BUILTIN_PROVIDERS: dict[str, ProviderAdapter] = {
     "stripe": StripeAdapter(),
     "flutterwave": FlutterwaveAdapter(),
     "monnify": MonnifyAdapter(),
+    "razorpay": RazorpayAdapter(),
 }
 
 PROVIDERS: dict[str, ProviderAdapter] = dict(BUILTIN_PROVIDERS)
@@ -53,7 +55,15 @@ def register_provider(
     name: str | None = None,
     replace: bool = False,
 ) -> ProviderAdapter:
-    provider_name = normalize_provider_name(name or adapter.name)
+    if not isinstance(adapter, ProviderAdapter):
+        raise TypeError("adapter must be a ProviderAdapter instance")
+
+    adapter_name = normalize_provider_name(adapter.name)
+    provider_name = normalize_provider_name(name or adapter_name)
+    if provider_name != adapter_name:
+        raise ValueError(
+            f"registration name '{provider_name}' does not match adapter.name '{adapter_name}'"
+        )
     if provider_name in PROVIDERS and not replace:
         raise ValueError(f"Provider '{provider_name}' is already registered")
     PROVIDERS[provider_name] = adapter

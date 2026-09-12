@@ -9,6 +9,9 @@
 - Added a secret-safe Redis background delivery queue and worker with asynchronous job status APIs.
 - Added the Community Provider SDK with `paylab.providers` entry-point discovery and built-in collision protection.
 - Added Monnify as a built-in provider with production-style `monnify-signature` HMAC-SHA512 signing, collection/refund fixtures, lifecycle defaults, and worker secret support.
+- Added Razorpay as a built-in provider with raw-body HMAC-SHA256 `X-Razorpay-Signature`, `x-razorpay-event-id`, payment/refund fixtures, lifecycle defaults, and worker secret support.
+- Hardened programmatic provider registration so invalid adapters and name mismatches fail explicitly.
+- Updated preview package/API versioning to `0.5.0.dev0` while the stable v0.5 release remains gated.
 - Kept in-memory streaming as the zero-config default and kept signing secrets/raw webhook bodies out of live stream and job payloads.
 
 ## 0.4.0
