@@ -25,13 +25,13 @@ async def test_redis_stream_cross_process_publish() -> None:
     channel = f"paylab:test:{uuid4().hex}"
     subscriber = stream_module.RedisEventStream(REDIS_URL, channel=channel)
     code = (
-        "import asyncio; "
-        "from paylab.stream import RedisEventStream; "
-        f"s=RedisEventStream({REDIS_URL!r}, channel={channel!r}); "
+        "import asyncio\n"
+        "from paylab.stream import RedisEventStream\n"
+        f"stream = RedisEventStream({REDIS_URL!r}, channel={channel!r})\n"
         "async def main():\n"
-        "    await s.publish({'type':'cross-process','value':42})\n"
-        "    await s.aclose()\n"
-        "asyncio.run(main())"
+        "    await stream.publish({'type': 'cross-process', 'value': 42})\n"
+        "    await stream.aclose()\n"
+        "asyncio.run(main())\n"
     )
 
     try:
