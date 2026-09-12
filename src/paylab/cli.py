@@ -1,3 +1,4 @@
+import asyncio
 import json
 from pathlib import Path
 from typing import Annotated
@@ -8,6 +9,7 @@ import uvicorn
 
 from paylab.models import ChaosResponse
 from paylab.reporting import render_chaos_report
+from paylab.worker import run_worker
 
 app = typer.Typer(
     help="PayLab — break your payment integration before your customers do.",
@@ -25,6 +27,25 @@ def start(
 ) -> None:
     """Start the PayLab API server."""
     uvicorn.run("paylab.api:app", host=host, port=port, reload=reload)
+
+
+@app.command()
+def worker(
+    once: Annotated[
+        bool,
+        typer.Option("--once", help="Process at most one queued delivery and exit."),
+    ] = False,
+    poll_timeout: Annotated[
+        int,
+        typer.Option("--poll-timeout", help="Redis blocking poll timeout in seconds."),
+    ] = 5,
+) -> None:
+    """Run the Redis-backed background webhook delivery worker."""
+    try:
+        asyncio.run(run_worker(once=once, poll_timeout_seconds=poll_timeout))
+    except (RuntimeError, ValueError) as exc:
+        typer.echo(f"PayLab worker failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
 
 
 @app.command()
