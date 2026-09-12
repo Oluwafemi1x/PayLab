@@ -177,6 +177,9 @@ def test_plugin_cannot_silently_replace_builtin(monkeypatch: pytest.MonkeyPatch)
     assert providers["paystack"].name == "paystack"
 
 
-def test_worker_secret_env_name_supports_plugin_names() -> None:
+def test_worker_secret_env_name_preserves_builtins_and_supports_plugins() -> None:
+    assert secret_env_name("paystack") == "PAYLAB_PAYSTACK_SECRET"
+    assert secret_env_name("stripe") == "PAYLAB_STRIPE_WEBHOOK_SECRET"
+    assert secret_env_name("flutterwave") == "PAYLAB_FLUTTERWAVE_SECRET"
     assert secret_env_name("m-pesa") == "PAYLAB_M_PESA_SECRET"
     assert secret_env_name("acme.pay") == "PAYLAB_ACME_PAY_SECRET"
