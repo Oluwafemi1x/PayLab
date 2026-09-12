@@ -18,7 +18,7 @@ def test_health() -> None:
 def test_provider_list() -> None:
     response = client.get("/v1/providers")
     assert response.status_code == 200
-    assert response.json()["providers"] == ["flutterwave", "paystack", "stripe"]
+    assert response.json()["providers"] == ["flutterwave", "monnify", "paystack", "stripe"]
 
 
 def test_openapi_contains_v03_routes() -> None:
