@@ -80,7 +80,7 @@ PayLab can also enqueue webhook deliveries and let a separate worker process exe
 ```text
 PAYLAB_REDIS_URL=redis://127.0.0.1:6379/0
 PAYLAB_PAYSTACK_SECRET=sk_test_paylab
-PAYLAB_STRIPE_SECRET=whsec_paylab
+PAYLAB_STRIPE_WEBHOOK_SECRET=whsec_paylab
 PAYLAB_FLUTTERWAVE_SECRET=flw_paylab
 ```
 

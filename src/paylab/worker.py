@@ -7,9 +7,15 @@ from paylab.engine import trigger_event
 from paylab.jobqueue import RedisJobQueue, get_job_queue
 from paylab.models import ProviderName, QueuedTriggerRequest, TriggerRequest
 
+_SECRET_ENV_NAMES: dict[ProviderName, str] = {
+    "paystack": "PAYLAB_PAYSTACK_SECRET",
+    "stripe": "PAYLAB_STRIPE_WEBHOOK_SECRET",
+    "flutterwave": "PAYLAB_FLUTTERWAVE_SECRET",
+}
+
 
 def secret_env_name(provider: ProviderName) -> str:
-    return f"PAYLAB_{provider.upper()}_SECRET"
+    return _SECRET_ENV_NAMES[provider]
 
 
 def resolve_provider_secret(provider: ProviderName) -> str:
