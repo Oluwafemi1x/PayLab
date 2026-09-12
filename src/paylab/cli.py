@@ -1,9 +1,13 @@
 import json
+from pathlib import Path
 from typing import Annotated
 
 import httpx
 import typer
 import uvicorn
+
+from paylab.models import ChaosResponse
+from paylab.reporting import render_chaos_report
 
 app = typer.Typer(
     help="PayLab — break your payment integration before your customers do.",
@@ -79,6 +83,52 @@ def trigger(
 
 
 @app.command()
+def lifecycle(
+    provider: Annotated[str, typer.Argument(help="paystack, stripe, or flutterwave")],
+    target_url: Annotated[str, typer.Argument(help="Your webhook endpoint")],
+    secret: Annotated[str, typer.Option("--secret", "-s", help="Webhook signing secret")],
+    events: Annotated[
+        str | None,
+        typer.Option("--events", help="Comma-separated event sequence; defaults by provider"),
+    ] = None,
+    out_of_order: Annotated[
+        bool, typer.Option("--out-of-order", help="Reverse the lifecycle event order")
+    ] = False,
+    interval: Annotated[
+        float, typer.Option("--interval", help="Seconds between lifecycle events")
+    ] = 0.1,
+    server: Annotated[
+        str, typer.Option("--server", help="Running PayLab server")
+    ] = "http://127.0.0.1:8787",
+) -> None:
+    """Run a payment lifecycle sequence, optionally out of order."""
+    event_list = [item.strip() for item in events.split(",") if item.strip()] if events else None
+    payload = {
+        "provider": provider,
+        "target_url": target_url,
+        "secret": secret,
+        "events": event_list,
+        "out_of_order": out_of_order,
+        "interval_seconds": interval,
+    }
+    try:
+        response = httpx.post(f"{server.rstrip('/')}/v1/lifecycle", json=payload, timeout=90)
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        typer.echo(f"PayLab lifecycle request failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    data = response.json()
+    typer.echo(f"Lifecycle: {data['lifecycle_id']} ({data['provider']})")
+    for step in data["steps"]:
+        marker = "ACK" if step["acknowledged"] else "FAIL"
+        typer.echo(
+            f"  {step['step']}. [{marker}] {step['event']} "
+            f"event_id={step['event_id']} statuses={step['status_codes']}"
+        )
+
+
+@app.command()
 def storm(
     provider: Annotated[str, typer.Argument(help="paystack, stripe, or flutterwave")],
     event: Annotated[str, typer.Argument(help="Provider event type")],
@@ -149,11 +199,11 @@ def history_command(
         typer.echo(f"PayLab history request failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
 
-    events = response.json()
-    if not events:
+    events_data = response.json()
+    if not events_data:
         typer.echo("No PayLab events recorded yet.")
         return
-    for item in events:
+    for item in events_data:
         typer.echo(
             f"{item['created_at']}  {item['event_id']}  "
             f"{item['provider']} / {item['event']}  attempts={len(item['deliveries'])}"
@@ -193,6 +243,9 @@ def chaos_checkout(
     json_output: Annotated[
         bool, typer.Option("--json", help="Print machine-readable JSON")
     ] = False,
+    html_report: Annotated[
+        str | None, typer.Option("--html", help="Write a standalone HTML reliability report")
+    ] = None,
     server: Annotated[
         str, typer.Option("--server", help="Running PayLab server")
     ] = "http://127.0.0.1:8787",
@@ -222,6 +275,14 @@ def chaos_checkout(
         raise typer.Exit(code=1) from exc
 
     data = response.json()
+    if html_report:
+        report_path = Path(html_report)
+        report_path.write_text(
+            render_chaos_report(ChaosResponse.model_validate(data)),
+            encoding="utf-8",
+        )
+        typer.echo(f"HTML report: {report_path.resolve()}")
+
     if json_output:
         typer.echo(json.dumps(data, indent=2))
         return

@@ -6,6 +6,7 @@ import httpx
 from paylab.history import EventHistory, get_history_store
 from paylab.models import DeliveryAttempt, TriggerRequest, TriggerResponse
 from paylab.providers import PROVIDERS
+from paylab.stream import EventStream, get_event_stream
 
 
 def _should_retry(status_code: int | None, error: str | None) -> bool:
@@ -16,8 +17,10 @@ async def trigger_event(
     request: TriggerRequest,
     *,
     history: EventHistory | None = None,
+    stream: EventStream | None = None,
     transport: httpx.AsyncBaseTransport | None = None,
     record_history: bool = True,
+    publish_stream: bool = True,
 ) -> TriggerResponse:
     adapter = PROVIDERS[request.provider]
     built = adapter.build_event(
@@ -93,4 +96,8 @@ async def trigger_event(
 
     if record_history:
         (history or get_history_store()).record(request, result)
+    if publish_stream:
+        await (stream or get_event_stream()).publish(
+            {"type": "delivery.completed", "event": result.model_dump(mode="json")}
+        )
     return result
