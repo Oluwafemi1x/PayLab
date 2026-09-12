@@ -6,6 +6,7 @@ from importlib import metadata as importlib_metadata
 
 from paylab.providers.base import ProviderAdapter
 from paylab.providers.flutterwave import FlutterwaveAdapter
+from paylab.providers.monnify import MonnifyAdapter
 from paylab.providers.paystack import PaystackAdapter
 from paylab.providers.stripe import StripeAdapter
 
@@ -16,6 +17,7 @@ BUILTIN_PROVIDERS: dict[str, ProviderAdapter] = {
     "paystack": PaystackAdapter(),
     "stripe": StripeAdapter(),
     "flutterwave": FlutterwaveAdapter(),
+    "monnify": MonnifyAdapter(),
 }
 
 PROVIDERS: dict[str, ProviderAdapter] = dict(BUILTIN_PROVIDERS)

@@ -6,8 +6,10 @@
 - Added an optional PostgreSQL history backend with native `JSONB`, safe upserts, Docker support, and real Postgres integration tests.
 - Added optional Redis Pub/Sub live streaming selected with `PAYLAB_REDIS_URL`.
 - Added cross-process live event fan-out so separate PayLab API processes can feed the same WebSocket/dashboard stream.
-- Added a real Redis service integration workflow, including a publisher running in a separate Python process.
-- Kept in-memory streaming as the zero-config default and kept signing secrets/raw webhook bodies out of live stream payloads.
+- Added a secret-safe Redis background delivery queue and worker with asynchronous job status APIs.
+- Added the Community Provider SDK with `paylab.providers` entry-point discovery and built-in collision protection.
+- Added Monnify as a built-in provider with production-style `monnify-signature` HMAC-SHA512 signing, collection/refund fixtures, lifecycle defaults, and worker secret support.
+- Kept in-memory streaming as the zero-config default and kept signing secrets/raw webhook bodies out of live stream and job payloads.
 
 ## 0.4.0
 
