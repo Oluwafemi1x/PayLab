@@ -108,6 +108,19 @@ The API returns `202 Accepted` with a job ID. Poll `GET /v1/jobs/{job_id}` until
 
 `paylab worker --once` processes at most one queued job and is useful for scripts and smoke tests.
 
+### Community provider SDK
+
+Third-party payment providers can plug into PayLab as separate Python packages through the `paylab.providers` entry-point group. Contributors no longer need to edit the PayLab core registry to add an adapter.
+
+```toml
+[project.entry-points."paylab.providers"]
+acmepay = "paylab_acmepay:AcmePayAdapter"
+```
+
+After installing the plugin in the same environment and restarting PayLab, it appears in `GET /v1/providers` and works through normal triggers, chaos tests, history, live streaming, and Redis workers.
+
+See [docs/provider-sdk.md](docs/provider-sdk.md) for the adapter contract, packaging example, worker secret naming, and testing checklist.
+
 `@main` is the v0.5 preview channel. A stable `v0.5.0` tag will be published only after the complete milestone passes its release checks.
 
 ## Install
@@ -233,7 +246,7 @@ docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-co
 - [x] PostgreSQL history backend with integration tests
 - [x] Redis-backed multi-process live streaming
 - [x] Redis delivery job queue + worker CLI
-- [ ] Community provider SDK
+- [x] Community provider SDK
 - [ ] Additional provider adapters
 - [ ] Stable `v0.5.0` release tag and launch assets
 
