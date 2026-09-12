@@ -3,10 +3,10 @@ import time
 
 import httpx
 
-from paylab.history import EventHistory, get_history_store
+from paylab.history import HistoryStore, get_history_store
 from paylab.models import DeliveryAttempt, TriggerRequest, TriggerResponse
 from paylab.providers import PROVIDERS
-from paylab.stream import EventStream, get_event_stream
+from paylab.stream import EventStreamBackend, get_event_stream
 
 
 def _should_retry(status_code: int | None, error: str | None) -> bool:
@@ -16,8 +16,8 @@ def _should_retry(status_code: int | None, error: str | None) -> bool:
 async def trigger_event(
     request: TriggerRequest,
     *,
-    history: EventHistory | None = None,
-    stream: EventStream | None = None,
+    history: HistoryStore | None = None,
+    stream: EventStreamBackend | None = None,
     transport: httpx.AsyncBaseTransport | None = None,
     record_history: bool = True,
     publish_stream: bool = True,

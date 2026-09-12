@@ -31,62 +31,49 @@ PayLab can run directly inside GitHub Actions and fail a workflow when a webhook
 Your application or staging webhook endpoint must already be reachable from the GitHub Actions runner.
 
 ```yaml
-name: Payment reliability
-
-on:
-  pull_request:
-
-jobs:
-  paylab:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # Start your application here so its webhook endpoint is reachable.
-      - name: Start application
-        run: ./scripts/start-test-app.sh
-
-      - name: Run PayLab reliability gate
-        id: paylab
-        uses: Oluwafemi1x/PayLab@main
-        with:
-          provider: paystack
-          event: charge.success
-          target-url: http://127.0.0.1:9000/webhooks/paystack
-          secret: ${{ secrets.PAYSTACK_WEBHOOK_SECRET }}
-          min-score: "100"
-
-      - name: Show score
-        run: echo "PayLab score = ${{ steps.paylab.outputs.percentage }}%"
+- name: Run PayLab reliability gate
+  id: paylab
+  uses: Oluwafemi1x/PayLab@main
+  with:
+    provider: paystack
+    event: charge.success
+    target-url: http://127.0.0.1:9000/webhooks/paystack
+    secret: ${{ secrets.PAYSTACK_WEBHOOK_SECRET }}
+    min-score: "100"
 ```
 
-The Action generates both `paylab-report.json` and `paylab-report.html` by default and exposes score, grade, percentage, pass/fail, and report-path outputs.
-
-Use `deep: "true"` only against local or staging endpoints that intentionally support PayLab's test-only fault protocol.
-
-`@main` is the preview channel while v0.5 is under development. A stable `v0.5.0` tag will be published after the full v0.5 milestone passes its release checks.
+The Action generates JSON and HTML reports and exposes score, grade, percentage, pass/fail, and report-path outputs.
 
 ### PostgreSQL history backend
 
-SQLite remains PayLab's zero-config default. For shared or longer-lived environments, install the optional PostgreSQL backend:
+SQLite remains PayLab's zero-config default. For shared or longer-lived environments:
 
 ```bash
 pip install -e ".[dev,postgres]"
 ```
 
-Set a PostgreSQL URL before starting PayLab:
-
 ```text
 PAYLAB_DATABASE_URL=postgresql://paylab:paylab@127.0.0.1:5432/paylab
 ```
 
-`PAYLAB_DATABASE_URL` takes precedence over `PAYLAB_DB_PATH`. PostgreSQL stores event metadata and delivery attempts as `JSONB`, and uses the same history API as SQLite.
+PostgreSQL uses native `JSONB` for metadata and delivery attempts and the same history API as SQLite.
 
-Run PayLab plus PostgreSQL with Docker Compose:
+### Redis multi-process live stream
+
+The live dashboard and `/v1/stream` WebSocket use an in-process event fan-out by default. For multiple PayLab API processes, install Redis support:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
+pip install -e ".[dev,redis]"
 ```
+
+```text
+PAYLAB_REDIS_URL=redis://127.0.0.1:6379/0
+PAYLAB_REDIS_CHANNEL=paylab:events
+```
+
+All processes configured with the same Redis URL/channel can publish and receive the same sanitized live delivery events. Signing secrets and raw webhook bodies are never placed on the stream.
+
+`@main` is the v0.5 preview channel. A stable `v0.5.0` tag will be published only after the complete milestone passes its release checks.
 
 ## Install
 
@@ -137,39 +124,15 @@ Open `/dashboard` and watch deliveries appear live.
 
 ```powershell
 paylab lifecycle paystack http://127.0.0.1:9000/webhooks/paystack --secret sk_test_paylab
-```
-
-Reverse the sequence to simulate out-of-order events:
-
-```powershell
 paylab lifecycle paystack http://127.0.0.1:9000/webhooks/paystack --secret sk_test_paylab --out-of-order
-```
-
-Use a custom sequence:
-
-```powershell
-paylab lifecycle stripe http://127.0.0.1:9000/webhooks/stripe --secret whsec_paylab --events "payment_intent.succeeded,charge.refunded"
 ```
 
 ## Checkout chaos suite
 
 ```powershell
 paylab chaos checkout paystack charge.success http://127.0.0.1:9000/webhooks/paystack --secret sk_test_paylab
-```
-
-Generate a standalone HTML report:
-
-```powershell
 paylab chaos checkout paystack charge.success http://127.0.0.1:9000/webhooks/paystack --secret sk_test_paylab --html paylab-report.html
 ```
-
-Deep mode adds controlled HTTP 500 and timeout recovery checks:
-
-```powershell
-paylab chaos checkout paystack charge.success http://127.0.0.1:9000/webhooks/paystack --secret sk_test_paylab --deep --probe-url http://127.0.0.1:9000/paylab/probe
-```
-
-> **Security:** Deep fault controls are for local/staging test endpoints only.
 
 ## Retry storms
 
@@ -179,13 +142,13 @@ paylab storm paystack charge.success http://127.0.0.1:9000/webhooks/paystack --s
 
 ## Persistent history
 
-By default, PayLab stores history in SQLite at `~/.paylab/paylab.db`. Override that path with `PAYLAB_DB_PATH`, or configure PostgreSQL with `PAYLAB_DATABASE_URL`.
+SQLite defaults to `~/.paylab/paylab.db`. Use `PAYLAB_DB_PATH` to change it, or configure PostgreSQL with `PAYLAB_DATABASE_URL`.
 
 ```powershell
 paylab history --provider paystack --limit 10
 ```
 
-PayLab deliberately does **not** persist webhook signing secrets or raw signed webhook bodies. This rule applies to both SQLite and PostgreSQL. Live WebSocket messages follow the same rule.
+PayLab deliberately does **not** persist or stream webhook signing secrets or raw signed webhook bodies.
 
 ## REST API
 
@@ -201,7 +164,7 @@ WS   /v1/stream
 
 ## Docker
 
-SQLite/default:
+Default SQLite/in-memory stream:
 
 ```bash
 docker compose up --build
@@ -213,13 +176,26 @@ PostgreSQL:
 docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
 ```
 
+Redis live stream:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.redis.yml up --build
+```
+
+PostgreSQL + Redis:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-compose.redis.yml up --build
+```
+
 ## Roadmap
 
 ### v0.5
 
 - [x] GitHub Action and CI reliability gates
 - [x] PostgreSQL history backend with integration tests
-- [ ] Redis-backed multi-process event streaming/workers
+- [x] Redis-backed multi-process live streaming
+- [ ] Redis delivery job queue + worker CLI
 - [ ] Community provider SDK
 - [ ] Additional provider adapters
 - [ ] Stable `v0.5.0` release tag and launch assets
@@ -230,12 +206,6 @@ docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
 pip install -e ".[dev]"
 ruff check .
 pytest -q
-```
-
-PostgreSQL integration development:
-
-```bash
-pip install -e ".[dev,postgres]"
 ```
 
 ## Contributing

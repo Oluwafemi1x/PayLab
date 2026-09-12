@@ -1,0 +1,20 @@
+services:
+  paylab:
+    environment:
+      PAYLAB_REDIS_URL: redis://redis:6379/0
+      PAYLAB_REDIS_CHANNEL: paylab:events
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - paylab-redis:/data
+
+volumes:
+  paylab-redis:
