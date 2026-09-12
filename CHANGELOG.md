@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — v0.5
+
+- Added a reusable GitHub Action that runs PayLab without starting the API server.
+- Added configurable CI reliability thresholds that fail the workflow below the required score.
+- Added machine-readable Action outputs for score, percentage, grade, pass/fail, and report paths.
+- Added automatic JSON and HTML reliability reports for CI runs.
+- Added a dedicated Action smoke workflow that tests the real composite Action against the bundled demo merchant.
+- Webhook signing secrets are passed to the Action through environment variables and are excluded from generated reports and outputs.
+
 ## 0.4.0
 
 - Added a live browser dashboard at `/dashboard` with recent event metrics and webhook activity.

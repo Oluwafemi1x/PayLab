@@ -1,0 +1,55 @@
+name: PayLab Action Smoke
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  action-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install current source for demo receiver
+        run: pip install -e .
+      - name: Start demo merchant
+        shell: bash
+        run: |
+          nohup python -m uvicorn examples.demo_receiver:app --port 9000 > merchant.log 2>&1 &
+          python - <<'PY'
+          import time
+          import urllib.request
+
+          for _ in range(30):
+              try:
+                  with urllib.request.urlopen("http://127.0.0.1:9000/docs", timeout=1):
+                      break
+              except Exception:
+                  time.sleep(0.2)
+          else:
+              raise SystemExit("demo merchant did not start")
+          PY
+      - name: Run local PayLab Action
+        id: paylab
+        uses: ./
+        with:
+          provider: paystack
+          event: charge.success
+          target-url: http://127.0.0.1:9000/webhooks/paystack
+          secret: sk_test_paylab
+          min-score: "100"
+          delay: "0"
+          json-report: paylab-smoke-report.json
+          html-report: paylab-smoke-report.html
+      - name: Assert Action outputs and reports
+        shell: bash
+        env:
+          PAYLAB_PASSED: ${{ steps.paylab.outputs.passed }}
+          PAYLAB_PERCENTAGE: ${{ steps.paylab.outputs.percentage }}
+        run: |
+          test "$PAYLAB_PASSED" = "true"
+          test "$PAYLAB_PERCENTAGE" = "100"
+          test -s paylab-smoke-report.json
+          test -s paylab-smoke-report.html

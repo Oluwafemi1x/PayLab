@@ -22,6 +22,56 @@ PayLab is an open-source payment reliability and chaos-testing toolkit for devel
 
 > **Alpha:** Payloads are representative test fixtures. PayLab is not affiliated with Paystack, Stripe, or Flutterwave.
 
+## v0.5 preview: GitHub Action reliability gate
+
+PayLab can now run directly inside GitHub Actions and fail a workflow when a webhook integration falls below a configured reliability threshold. The Action runs the chaos engine directly, so you do **not** need to start the PayLab API server in CI.
+
+Your application or staging webhook endpoint must already be reachable from the GitHub Actions runner.
+
+```yaml
+name: Payment reliability
+
+on:
+  pull_request:
+
+jobs:
+  paylab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Start your application here so its webhook endpoint is reachable.
+      - name: Start application
+        run: ./scripts/start-test-app.sh
+
+      - name: Run PayLab reliability gate
+        id: paylab
+        uses: Oluwafemi1x/PayLab@main
+        with:
+          provider: paystack
+          event: charge.success
+          target-url: http://127.0.0.1:9000/webhooks/paystack
+          secret: ${{ secrets.PAYSTACK_WEBHOOK_SECRET }}
+          min-score: "100"
+
+      - name: Show score
+        run: echo "PayLab score = ${{ steps.paylab.outputs.percentage }}%"
+```
+
+The Action generates both `paylab-report.json` and `paylab-report.html` by default and exposes these outputs:
+
+- `score`
+- `max-score`
+- `percentage`
+- `grade`
+- `passed`
+- `json-report`
+- `html-report`
+
+Use `deep: "true"` only against local or staging endpoints that intentionally support PayLab's test-only fault protocol.
+
+`@main` is the preview channel while v0.5 is under development. A stable `v0.5.0` tag will be published after the full v0.5 milestone passes its release checks.
+
 ## Install
 
 ```bash
@@ -143,11 +193,12 @@ docker compose up --build
 
 ### v0.5
 
-- PostgreSQL history backend with integration tests
-- Redis-backed multi-process event streaming/workers
-- GitHub Action and CI reliability gates
-- Community provider SDK
-- Additional provider adapters
+- [x] GitHub Action and CI reliability gates
+- [ ] PostgreSQL history backend with integration tests
+- [ ] Redis-backed multi-process event streaming/workers
+- [ ] Community provider SDK
+- [ ] Additional provider adapters
+- [ ] Stable `v0.5.0` release tag and launch assets
 
 ## Development
 
