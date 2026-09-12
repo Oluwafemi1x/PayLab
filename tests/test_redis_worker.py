@@ -9,10 +9,17 @@ import pytest
 
 from paylab.jobqueue import RedisJobQueue
 from paylab.models import QueuedTriggerRequest
+from paylab.worker import secret_env_name
 
 pytest.importorskip("redis")
 
 REDIS_URL = os.getenv("PAYLAB_TEST_REDIS_URL", "")
+
+
+def test_provider_secret_environment_names_match_public_config() -> None:
+    assert secret_env_name("paystack") == "PAYLAB_PAYSTACK_SECRET"
+    assert secret_env_name("stripe") == "PAYLAB_STRIPE_WEBHOOK_SECRET"
+    assert secret_env_name("flutterwave") == "PAYLAB_FLUTTERWAVE_SECRET"
 
 
 @pytest.mark.asyncio
