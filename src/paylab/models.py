@@ -5,6 +5,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field
 
 ProviderName = Literal["paystack", "stripe", "flutterwave"]
 FaultMode = Literal["none", "fail-once", "timeout-once"]
+JobState = Literal["queued", "running", "succeeded", "failed"]
 
 
 class TriggerRequest(BaseModel):
@@ -12,6 +13,23 @@ class TriggerRequest(BaseModel):
     event: str = Field(min_length=1, examples=["charge.success"])
     target_url: AnyHttpUrl
     secret: str = Field(min_length=1, description="Webhook signing secret used for the simulation.")
+    duplicate: int = Field(default=1, ge=1, le=20)
+    delay_seconds: float = Field(default=0.0, ge=0.0, le=60.0)
+    invalid_signature: bool = False
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    retry_count: int = Field(default=0, ge=0, le=10)
+    retry_delay_seconds: float = Field(default=0.1, ge=0.0, le=10.0)
+    delivery_interval_seconds: float = Field(default=0.0, ge=0.0, le=10.0)
+    timeout_seconds: float = Field(default=10.0, ge=0.05, le=60.0)
+    fault: FaultMode = "none"
+
+
+class QueuedTriggerRequest(BaseModel):
+    """Background delivery request. Signing secrets are resolved only inside workers."""
+
+    provider: ProviderName
+    event: str = Field(min_length=1, examples=["charge.success"])
+    target_url: AnyHttpUrl
     duplicate: int = Field(default=1, ge=1, le=20)
     delay_seconds: float = Field(default=0.0, ge=0.0, le=60.0)
     invalid_signature: bool = False
@@ -42,6 +60,16 @@ class TriggerResponse(BaseModel):
     retry_count: int = 0
     fault: FaultMode = "none"
     deliveries: list[DeliveryAttempt]
+
+
+class QueuedJobStatus(BaseModel):
+    job_id: str
+    status: JobState
+    provider: ProviderName
+    event: str
+    target_url: str
+    result: TriggerResponse | None = None
+    error: str | None = None
 
 
 class ChaosRequest(BaseModel):

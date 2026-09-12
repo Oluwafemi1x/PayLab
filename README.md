@@ -73,6 +73,41 @@ PAYLAB_REDIS_CHANNEL=paylab:events
 
 All processes configured with the same Redis URL/channel can publish and receive the same sanitized live delivery events. Signing secrets and raw webhook bodies are never placed on the stream.
 
+### Redis background delivery worker
+
+PayLab can also enqueue webhook deliveries and let a separate worker process execute them. The API queue payload does **not** accept or store the provider signing secret. Workers resolve secrets only from their own environment.
+
+```text
+PAYLAB_REDIS_URL=redis://127.0.0.1:6379/0
+PAYLAB_PAYSTACK_SECRET=sk_test_paylab
+PAYLAB_STRIPE_SECRET=whsec_paylab
+PAYLAB_FLUTTERWAVE_SECRET=flw_paylab
+```
+
+Start the API and worker in separate terminals:
+
+```powershell
+paylab start
+paylab worker
+```
+
+Queue a delivery:
+
+```http
+POST /v1/jobs/trigger
+Content-Type: application/json
+
+{
+  "provider": "paystack",
+  "event": "charge.success",
+  "target_url": "http://127.0.0.1:9000/webhooks/paystack"
+}
+```
+
+The API returns `202 Accepted` with a job ID. Poll `GET /v1/jobs/{job_id}` until the job reaches `succeeded` or `failed`. Completed delivery results contain status codes and latencies but never the signing secret.
+
+`paylab worker --once` processes at most one queued job and is useful for scripts and smoke tests.
+
 `@main` is the v0.5 preview channel. A stable `v0.5.0` tag will be published only after the complete milestone passes its release checks.
 
 ## Install
@@ -154,6 +189,8 @@ PayLab deliberately does **not** persist or stream webhook signing secrets or ra
 
 ```text
 POST /v1/events/trigger
+POST /v1/jobs/trigger
+GET  /v1/jobs/{job_id}
 POST /v1/lifecycle
 POST /v1/chaos/checkout
 POST /v1/chaos/checkout/report
@@ -176,7 +213,7 @@ PostgreSQL:
 docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
 ```
 
-Redis live stream:
+Redis live stream / job queue:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.redis.yml up --build
@@ -195,7 +232,7 @@ docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-co
 - [x] GitHub Action and CI reliability gates
 - [x] PostgreSQL history backend with integration tests
 - [x] Redis-backed multi-process live streaming
-- [ ] Redis delivery job queue + worker CLI
+- [x] Redis delivery job queue + worker CLI
 - [ ] Community provider SDK
 - [ ] Additional provider adapters
 - [ ] Stable `v0.5.0` release tag and launch assets
