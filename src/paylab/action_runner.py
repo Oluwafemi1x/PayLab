@@ -108,12 +108,6 @@ def main() -> int:
     except (OSError, ValueError) as exc:
         print(f"PayLab Action failed to write its reports or outputs: {exc}", file=sys.stderr)
         return 1
-    except Exception as exc:
-        print(
-            f"PayLab Action runtime failure: {type(exc).__name__}",
-            file=sys.stderr,
-        )
-        return 1
 
     _print_summary(
         config,
