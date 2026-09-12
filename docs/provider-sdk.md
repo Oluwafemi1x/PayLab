@@ -68,7 +68,7 @@ In the plugin package's `pyproject.toml`:
 [project]
 name = "paylab-acmepay"
 version = "0.1.0"
-dependencies = ["paylab-dev>=0.5"]
+dependencies = ["paylab-dev>=0.5.0.dev0,<0.6"]
 
 [project.entry-points."paylab.providers"]
 acmepay = "paylab_acmepay:AcmePayAdapter"
@@ -76,7 +76,7 @@ acmepay = "paylab_acmepay:AcmePayAdapter"
 
 The entry-point name and `adapter.name` must match. Provider names are lowercase and may contain letters, digits, `.`, `_`, and `-`.
 
-Plugins cannot silently replace built-in providers such as `paystack`, `stripe`, or `flutterwave`.
+Plugins cannot silently replace built-in providers such as `paystack`, `stripe`, `flutterwave`, `monnify`, or `razorpay`.
 
 ## 3. Install and use it
 

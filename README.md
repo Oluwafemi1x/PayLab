@@ -20,9 +20,23 @@ PayLab is an open-source payment reliability and chaos-testing toolkit for devel
 - **Standalone HTML reliability reports**
 - FastAPI REST API, CLI, Docker, pytest, and GitHub Actions
 
-> **Alpha:** Payloads are representative test fixtures. PayLab is not affiliated with Paystack, Stripe, or Flutterwave.
+> **Alpha:** Payloads are representative test fixtures. PayLab is not affiliated with Paystack, Stripe, Flutterwave, Monnify, or Razorpay.
 
 ## v0.5 preview
+
+The `main` branch identifies itself as `0.5.0.dev0` while v0.5 is being completed and release-gated.
+
+### Built-in providers
+
+PayLab currently includes five built-in adapters:
+
+- Paystack
+- Stripe
+- Flutterwave
+- Monnify
+- Razorpay
+
+Third-party adapters can also be installed through the [Community Provider SDK](docs/provider-sdk.md) without changing PayLab core.
 
 ### GitHub Action reliability gate
 
@@ -82,6 +96,8 @@ PAYLAB_REDIS_URL=redis://127.0.0.1:6379/0
 PAYLAB_PAYSTACK_SECRET=sk_test_paylab
 PAYLAB_STRIPE_WEBHOOK_SECRET=whsec_paylab
 PAYLAB_FLUTTERWAVE_SECRET=flw_paylab
+PAYLAB_MONNIFY_SECRET=monnify_paylab
+PAYLAB_RAZORPAY_SECRET=razorpay_paylab
 ```
 
 Start the API and worker in separate terminals:
@@ -147,10 +163,16 @@ paylab start
 uvicorn examples.demo_receiver:app --port 9000
 ```
 
-Trigger a signed event:
+Trigger a signed Paystack event:
 
 ```powershell
 paylab trigger paystack charge.success http://127.0.0.1:9000/webhooks/paystack --secret sk_test_paylab
+```
+
+Trigger a signed Razorpay event:
+
+```powershell
+paylab trigger razorpay payment.captured http://127.0.0.1:9000/webhooks/razorpay --secret razorpay_paylab
 ```
 
 Open `/dashboard` and watch deliveries appear live.
@@ -160,6 +182,7 @@ Open `/dashboard` and watch deliveries appear live.
 ```powershell
 paylab lifecycle paystack http://127.0.0.1:9000/webhooks/paystack --secret sk_test_paylab
 paylab lifecycle paystack http://127.0.0.1:9000/webhooks/paystack --secret sk_test_paylab --out-of-order
+paylab lifecycle razorpay http://127.0.0.1:9000/webhooks/razorpay --secret razorpay_paylab --out-of-order
 ```
 
 ## Checkout chaos suite
@@ -233,8 +256,8 @@ docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-co
 - [x] PostgreSQL history backend with integration tests
 - [x] Redis-backed multi-process live streaming
 - [x] Redis delivery job queue + worker CLI
-- [ ] Community provider SDK
-- [ ] Additional provider adapters
+- [x] Community provider SDK
+- [x] Additional provider adapters: Monnify and Razorpay
 - [ ] Stable `v0.5.0` release tag and launch assets
 
 ## Development

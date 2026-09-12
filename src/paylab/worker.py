@@ -12,6 +12,7 @@ _SECRET_ENV_NAMES: dict[str, str] = {
     "stripe": "PAYLAB_STRIPE_WEBHOOK_SECRET",
     "flutterwave": "PAYLAB_FLUTTERWAVE_SECRET",
     "monnify": "PAYLAB_MONNIFY_SECRET",
+    "razorpay": "PAYLAB_RAZORPAY_SECRET",
 }
 
 

@@ -20,6 +20,8 @@ def test_provider_secret_environment_names_match_public_config() -> None:
     assert secret_env_name("paystack") == "PAYLAB_PAYSTACK_SECRET"
     assert secret_env_name("stripe") == "PAYLAB_STRIPE_WEBHOOK_SECRET"
     assert secret_env_name("flutterwave") == "PAYLAB_FLUTTERWAVE_SECRET"
+    assert secret_env_name("monnify") == "PAYLAB_MONNIFY_SECRET"
+    assert secret_env_name("razorpay") == "PAYLAB_RAZORPAY_SECRET"
 
 
 @pytest.mark.asyncio
