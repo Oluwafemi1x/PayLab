@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0
+
+- Added a live browser dashboard at `/dashboard` with recent event metrics and webhook activity.
+- Added the `/v1/stream` WebSocket endpoint for real-time delivery events.
+- Added lifecycle simulation with provider defaults, custom sequences, and reversed out-of-order delivery.
+- Added `paylab lifecycle` for running lifecycle sequences from the CLI.
+- Added standalone HTML chaos reports through `paylab chaos checkout --html report.html`.
+- Added `POST /v1/chaos/checkout/report` for server-rendered HTML reliability reports.
+- Live stream payloads intentionally exclude webhook secrets and raw signed bodies.
+- Expanded automated coverage for streaming, lifecycle ordering, dashboard delivery, WebSocket handshake, and report escaping.
+
 ## 0.3.0
 
 - Added persistent SQLite event history without storing webhook secrets or raw signed payloads.

@@ -90,3 +90,30 @@ class HistoryEvent(BaseModel):
     created_at: datetime
     metadata: dict[str, Any]
     deliveries: list[DeliveryAttempt]
+
+
+class LifecycleRequest(BaseModel):
+    provider: ProviderName
+    target_url: AnyHttpUrl
+    secret: str = Field(min_length=1)
+    events: list[str] | None = Field(default=None, min_length=1, max_length=12)
+    out_of_order: bool = False
+    interval_seconds: float = Field(default=0.1, ge=0.0, le=10.0)
+    timeout_seconds: float = Field(default=10.0, ge=0.05, le=60.0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class LifecycleStep(BaseModel):
+    step: int
+    event: str
+    event_id: str
+    acknowledged: bool
+    status_codes: list[int | None]
+
+
+class LifecycleResponse(BaseModel):
+    lifecycle_id: str
+    provider: ProviderName
+    target_url: str
+    out_of_order: bool
+    steps: list[LifecycleStep]
