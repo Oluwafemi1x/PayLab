@@ -1,11 +1,21 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field
+from pydantic import AfterValidator, AnyHttpUrl, BaseModel, Field
 
-ProviderName = Literal["paystack", "stripe", "flutterwave"]
 FaultMode = Literal["none", "fail-once", "timeout-once"]
 JobState = Literal["queued", "running", "succeeded", "failed"]
+
+
+def _validate_provider_name(value: str) -> str:
+    from paylab.providers import get_provider, normalize_provider_name
+
+    provider = normalize_provider_name(value)
+    get_provider(provider)
+    return provider
+
+
+ProviderName = Annotated[str, AfterValidator(_validate_provider_name)]
 
 
 class TriggerRequest(BaseModel):
