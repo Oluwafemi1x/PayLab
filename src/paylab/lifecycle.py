@@ -17,6 +17,18 @@ DEFAULT_LIFECYCLES: dict[str, tuple[str, ...]] = {
 }
 
 
+def lifecycle_events(request: LifecycleRequest) -> list[str]:
+    if request.events:
+        return list(request.events)
+
+    defaults = DEFAULT_LIFECYCLES.get(request.provider)
+    if defaults is None:
+        raise ValueError(
+            f"Provider '{request.provider}' has no default lifecycle; supply events explicitly."
+        )
+    return list(defaults)
+
+
 async def run_lifecycle(
     request: LifecycleRequest,
     *,
@@ -26,7 +38,7 @@ async def run_lifecycle(
     record_history: bool = True,
     publish_stream: bool = True,
 ) -> LifecycleResponse:
-    events = list(request.events or DEFAULT_LIFECYCLES[request.provider])
+    events = lifecycle_events(request)
     if request.out_of_order:
         events.reverse()
 

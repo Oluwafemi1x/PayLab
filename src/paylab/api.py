@@ -73,7 +73,10 @@ async def job_status(job_id: str) -> QueuedJobStatus:
 
 @app.post("/v1/lifecycle", response_model=LifecycleResponse)
 async def lifecycle(request: LifecycleRequest) -> LifecycleResponse:
-    return await run_lifecycle(request)
+    try:
+        return await run_lifecycle(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @app.post("/v1/chaos/checkout", response_model=ChaosResponse)
