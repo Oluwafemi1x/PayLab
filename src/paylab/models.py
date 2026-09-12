@@ -1,15 +1,32 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field
+from pydantic import AfterValidator, AnyHttpUrl, BaseModel, Field
 
-ProviderName = Literal["paystack", "stripe", "flutterwave"]
 FaultMode = Literal["none", "fail-once", "timeout-once"]
 JobState = Literal["queued", "running", "succeeded", "failed"]
 
 
+def _normalize_provider_name(value: str) -> str:
+    from paylab.providers import normalize_provider_name
+
+    return normalize_provider_name(value)
+
+
+def _validate_installed_provider(value: str) -> str:
+    from paylab.providers import get_provider
+
+    provider = _normalize_provider_name(value)
+    get_provider(provider)
+    return provider
+
+
+ProviderName = Annotated[str, AfterValidator(_normalize_provider_name)]
+InstalledProviderName = Annotated[str, AfterValidator(_validate_installed_provider)]
+
+
 class TriggerRequest(BaseModel):
-    provider: ProviderName
+    provider: InstalledProviderName
     event: str = Field(min_length=1, examples=["charge.success"])
     target_url: AnyHttpUrl
     secret: str = Field(min_length=1, description="Webhook signing secret used for the simulation.")
@@ -27,7 +44,7 @@ class TriggerRequest(BaseModel):
 class QueuedTriggerRequest(BaseModel):
     """Background delivery request. Signing secrets are resolved only inside workers."""
 
-    provider: ProviderName
+    provider: InstalledProviderName
     event: str = Field(min_length=1, examples=["charge.success"])
     target_url: AnyHttpUrl
     duplicate: int = Field(default=1, ge=1, le=20)
@@ -73,7 +90,7 @@ class QueuedJobStatus(BaseModel):
 
 
 class ChaosRequest(BaseModel):
-    provider: ProviderName
+    provider: InstalledProviderName
     event: str = Field(min_length=1, examples=["charge.success"])
     target_url: AnyHttpUrl
     secret: str = Field(min_length=1)
@@ -121,7 +138,7 @@ class HistoryEvent(BaseModel):
 
 
 class LifecycleRequest(BaseModel):
-    provider: ProviderName
+    provider: InstalledProviderName
     target_url: AnyHttpUrl
     secret: str = Field(min_length=1)
     events: list[str] | None = Field(default=None, min_length=1, max_length=12)

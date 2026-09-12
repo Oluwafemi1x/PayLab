@@ -1,12 +1,23 @@
 from paylab.providers.base import ProviderAdapter
-from paylab.providers.flutterwave import FlutterwaveAdapter
-from paylab.providers.paystack import PaystackAdapter
-from paylab.providers.stripe import StripeAdapter
+from paylab.providers.registry import (
+    BUILTIN_PROVIDERS,
+    PROVIDERS,
+    get_provider,
+    load_entry_point_providers,
+    normalize_provider_name,
+    provider_names,
+    register_provider,
+)
 
-PROVIDERS: dict[str, ProviderAdapter] = {
-    "paystack": PaystackAdapter(),
-    "stripe": StripeAdapter(),
-    "flutterwave": FlutterwaveAdapter(),
-}
+load_entry_point_providers()
 
-__all__ = ["PROVIDERS", "ProviderAdapter"]
+__all__ = [
+    "BUILTIN_PROVIDERS",
+    "PROVIDERS",
+    "ProviderAdapter",
+    "get_provider",
+    "load_entry_point_providers",
+    "normalize_provider_name",
+    "provider_names",
+    "register_provider",
+]
