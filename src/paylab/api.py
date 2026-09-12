@@ -6,6 +6,7 @@ from paylab.chaos import run_checkout_chaos
 from paylab.dashboard import DASHBOARD_HTML
 from paylab.engine import trigger_event
 from paylab.history import get_history_store
+from paylab.jobqueue import get_job_queue
 from paylab.lifecycle import run_lifecycle
 from paylab.models import (
     ChaosRequest,
@@ -14,6 +15,8 @@ from paylab.models import (
     LifecycleRequest,
     LifecycleResponse,
     ProviderName,
+    QueuedJobStatus,
+    QueuedTriggerRequest,
     TriggerRequest,
     TriggerResponse,
 )
@@ -47,6 +50,25 @@ async def providers() -> dict[str, list[str]]:
 @app.post("/v1/events/trigger", response_model=TriggerResponse)
 async def trigger(request: TriggerRequest) -> TriggerResponse:
     return await trigger_event(request)
+
+
+@app.post("/v1/jobs/trigger", response_model=QueuedJobStatus, status_code=202)
+async def queue_trigger(request: QueuedTriggerRequest) -> QueuedJobStatus:
+    try:
+        return await get_job_queue().enqueue(request)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@app.get("/v1/jobs/{job_id}", response_model=QueuedJobStatus)
+async def job_status(job_id: str) -> QueuedJobStatus:
+    try:
+        job = await get_job_queue().get(job_id)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
 
 
 @app.post("/v1/lifecycle", response_model=LifecycleResponse)
