@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "paylab-dev"
-version = "0.5.0.dev0"
+version = "0.5.0"
 description = "Open-source payment reliability and chaos-testing toolkit for webhook integrations."
 readme = "README.md"
 requires-python = ">=3.11"

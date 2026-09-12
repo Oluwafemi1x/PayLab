@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v0.5
+## 0.5.0 — 2026-09-12
 
 - Added a reusable GitHub Action with configurable CI reliability thresholds and secret-safe JSON/HTML reports.
 - Added an optional PostgreSQL history backend with native `JSONB`, safe upserts, Docker support, and real Postgres integration tests.
@@ -11,7 +11,7 @@
 - Added Monnify as a built-in provider with production-style `monnify-signature` HMAC-SHA512 signing, collection/refund fixtures, lifecycle defaults, and worker secret support.
 - Added Razorpay as a built-in provider with raw-body HMAC-SHA256 `X-Razorpay-Signature`, `x-razorpay-event-id`, payment/refund fixtures, lifecycle defaults, and worker secret support.
 - Hardened programmatic provider registration so invalid adapters and name mismatches fail explicitly.
-- Updated preview package/API versioning to `0.5.0.dev0` while the stable v0.5 release remains gated.
+- Added package/runtime version-consistency regression coverage.
 - Kept in-memory streaming as the zero-config default and kept signing secrets/raw webhook bodies out of live stream and job payloads.
 
 ## 0.4.0

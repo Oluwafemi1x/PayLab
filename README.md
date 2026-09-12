@@ -4,27 +4,9 @@
 
 PayLab is an open-source payment reliability and chaos-testing toolkit for developers. It creates realistic signed payment webhook events, repeats and delays them, injects controlled failures, retries failed deliveries, records what happened, and exposes a live dashboard for watching tests as they happen.
 
-## v0.4.0
+## v0.5.0
 
-- Paystack, Stripe, and Flutterwave webhook simulation
-- Provider-compatible webhook signatures
-- Duplicate, delayed, and invalid-signature delivery tests
-- Retry-on-timeout and retry-on-HTTP-5xx behavior
-- Rapid repeated-delivery storms
-- Persistent SQLite event history
-- Deep fail-once and timeout-once chaos tests
-- Optional business-level idempotency probe
-- **Live browser dashboard**
-- **WebSocket delivery stream**
-- **Payment lifecycle and out-of-order event simulation**
-- **Standalone HTML reliability reports**
-- FastAPI REST API, CLI, Docker, pytest, and GitHub Actions
-
-> **Alpha:** Payloads are representative test fixtures. PayLab is not affiliated with Paystack, Stripe, Flutterwave, Monnify, or Razorpay.
-
-## v0.5 preview
-
-The `main` branch identifies itself as `0.5.0.dev0` while v0.5 is being completed and release-gated.
+PayLab v0.5.0 turns the project into a CI-ready payment reliability platform with production-oriented storage and worker foundations, pluggable provider support, and five built-in payment adapters.
 
 ### Built-in providers
 
@@ -38,6 +20,8 @@ PayLab currently includes five built-in adapters:
 
 Third-party adapters can also be installed through the [Community Provider SDK](docs/provider-sdk.md) without changing PayLab core.
 
+> **Alpha:** Payloads are representative test fixtures. PayLab is not affiliated with Paystack, Stripe, Flutterwave, Monnify, or Razorpay.
+
 ### GitHub Action reliability gate
 
 PayLab can run directly inside GitHub Actions and fail a workflow when a webhook integration falls below a configured reliability threshold. The Action runs the chaos engine directly, so you do **not** need to start the PayLab API server in CI.
@@ -47,7 +31,7 @@ Your application or staging webhook endpoint must already be reachable from the 
 ```yaml
 - name: Run PayLab reliability gate
   id: paylab
-  uses: Oluwafemi1x/PayLab@main
+  uses: Oluwafemi1x/PayLab@v0.5.0
   with:
     provider: paystack
     event: charge.success
@@ -89,7 +73,7 @@ All processes configured with the same Redis URL/channel can publish and receive
 
 ### Redis background delivery worker
 
-PayLab can also enqueue webhook deliveries and let a separate worker process execute them. The API queue payload does **not** accept or store the provider signing secret. Workers resolve secrets only from their own environment.
+PayLab can enqueue webhook deliveries and let a separate worker process execute them. The API queue payload does **not** accept or store the provider signing secret. Workers resolve secrets only from their own environment.
 
 ```text
 PAYLAB_REDIS_URL=redis://127.0.0.1:6379/0
@@ -123,8 +107,6 @@ Content-Type: application/json
 The API returns `202 Accepted` with a job ID. Poll `GET /v1/jobs/{job_id}` until the job reaches `succeeded` or `failed`. Completed delivery results contain status codes and latencies but never the signing secret.
 
 `paylab worker --once` processes at most one queued job and is useful for scripts and smoke tests.
-
-`@main` is the v0.5 preview channel. A stable `v0.5.0` tag will be published only after the complete milestone passes its release checks.
 
 ## Install
 
