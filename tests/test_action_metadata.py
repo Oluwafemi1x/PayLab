@@ -1,5 +1,13 @@
 from pathlib import Path
 
+import yaml
+
+
+def test_action_manifest_is_valid_yaml() -> None:
+    manifest = yaml.safe_load(Path("action.yml").read_text(encoding="utf-8"))
+    assert manifest["runs"]["using"] == "composite"
+    assert manifest["inputs"]["provider"]["required"] is True
+
 
 def test_action_manifest_uses_secret_as_environment_input() -> None:
     manifest = Path("action.yml").read_text(encoding="utf-8")

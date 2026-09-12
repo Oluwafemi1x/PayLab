@@ -1,5 +1,5 @@
 name: PayLab Payment Reliability Gate
-description: Fail CI when a payment webhook integration cannot survive PayLab reliability scenarios.
+description: "Fail CI when a payment webhook integration cannot survive PayLab reliability scenarios."
 author: Olawumi Oluwafemi
 
 branding:
@@ -8,79 +8,79 @@ branding:
 
 inputs:
   provider:
-    description: Payment provider to simulate: paystack, stripe, or flutterwave.
+    description: "Payment provider to simulate: paystack, stripe, or flutterwave."
     required: true
   event:
-    description: Provider success event type to test.
+    description: "Provider success event type to test."
     required: true
   target-url:
-    description: Webhook endpoint that is already reachable from the GitHub Actions runner.
+    description: "Webhook endpoint that is already reachable from the GitHub Actions runner."
     required: true
   secret:
-    description: Webhook signing secret used by the test receiver.
+    description: "Webhook signing secret used by the test receiver."
     required: true
   min-score:
-    description: Minimum reliability percentage required for the workflow to pass.
+    description: "Minimum reliability percentage required for the workflow to pass."
     required: false
     default: "100"
   duplicate:
-    description: Number of deliveries in the duplicate-webhook scenario.
+    description: "Number of deliveries in the duplicate-webhook scenario."
     required: false
     default: "3"
   delay:
-    description: Delay in seconds for the delayed-webhook scenario.
+    description: "Delay in seconds for the delayed-webhook scenario."
     required: false
     default: "1"
   deep:
-    description: Enable test-only fail-once and timeout-once recovery scenarios.
+    description: "Enable test-only fail-once and timeout-once recovery scenarios."
     required: false
     default: "false"
   probe-url:
-    description: Optional business-idempotency probe URL for deep testing.
+    description: "Optional business-idempotency probe URL for deep testing."
     required: false
     default: ""
   retry:
-    description: Retry count for deep recovery scenarios.
+    description: "Retry count for deep recovery scenarios."
     required: false
     default: "2"
   timeout:
-    description: Timeout in seconds used by the deep timeout-recovery scenario.
+    description: "Timeout in seconds used by the deep timeout-recovery scenario."
     required: false
     default: "0.15"
   json-report:
-    description: Path for the machine-readable reliability report.
+    description: "Path for the machine-readable reliability report."
     required: false
     default: paylab-report.json
   html-report:
-    description: Path for the standalone HTML reliability report.
+    description: "Path for the standalone HTML reliability report."
     required: false
     default: paylab-report.html
   python-version:
-    description: Python version used to execute PayLab.
+    description: "Python version used to execute PayLab."
     required: false
     default: "3.12"
 
 outputs:
   score:
-    description: Raw reliability points earned.
+    description: "Raw reliability points earned."
     value: ${{ steps.gate.outputs.score }}
   max-score:
-    description: Maximum reliability points available.
+    description: "Maximum reliability points available."
     value: ${{ steps.gate.outputs.max_score }}
   percentage:
-    description: Reliability percentage from 0 to 100.
+    description: "Reliability percentage from 0 to 100."
     value: ${{ steps.gate.outputs.percentage }}
   grade:
-    description: PayLab reliability grade.
+    description: "PayLab reliability grade."
     value: ${{ steps.gate.outputs.grade }}
   passed:
-    description: Whether the configured reliability threshold passed.
+    description: "Whether the configured reliability threshold passed."
     value: ${{ steps.gate.outputs.passed }}
   json-report:
-    description: Absolute path to the generated JSON report.
+    description: "Absolute path to the generated JSON report."
     value: ${{ steps.gate.outputs.json_report }}
   html-report:
-    description: Absolute path to the generated HTML report.
+    description: "Absolute path to the generated HTML report."
     value: ${{ steps.gate.outputs.html_report }}
 
 runs:
