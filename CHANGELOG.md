@@ -2,17 +2,12 @@
 
 ## Unreleased — v0.5
 
-- Added a reusable GitHub Action that runs PayLab without starting the API server.
-- Added configurable CI reliability thresholds that fail the workflow below the required score.
-- Added machine-readable Action outputs for score, percentage, grade, pass/fail, and report paths.
-- Added automatic JSON and HTML reliability reports for CI runs.
-- Added a dedicated Action smoke workflow that tests the real composite Action against the bundled demo merchant.
-- Webhook signing secrets are passed to the Action through environment variables and are excluded from generated reports and outputs.
-- Added an optional PostgreSQL history backend selected with `PAYLAB_DATABASE_URL`.
-- Added native PostgreSQL `JSONB` storage for event metadata and delivery attempts.
-- Added PostgreSQL event upserts with `ON CONFLICT` while preserving SQLite as the zero-config default.
-- Added a real PostgreSQL service integration workflow that validates round trips, upserts, provider filtering, and backend selection.
-- Added a Docker Compose PostgreSQL override for local integration environments.
+- Added a reusable GitHub Action with configurable CI reliability thresholds and secret-safe JSON/HTML reports.
+- Added an optional PostgreSQL history backend with native `JSONB`, safe upserts, Docker support, and real Postgres integration tests.
+- Added optional Redis Pub/Sub live streaming selected with `PAYLAB_REDIS_URL`.
+- Added cross-process live event fan-out so separate PayLab API processes can feed the same WebSocket/dashboard stream.
+- Added a real Redis service integration workflow, including a publisher running in a separate Python process.
+- Kept in-memory streaming as the zero-config default and kept signing secrets/raw webhook bodies out of live stream payloads.
 
 ## 0.4.0
 
