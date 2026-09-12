@@ -20,7 +20,7 @@ def resolve_provider_secret(provider: ProviderName) -> str:
     return secret
 
 
-def _safe_failure(exc: Exception) -> str:
+def _safe_failure(exc: RuntimeError | ValueError) -> str:
     if isinstance(exc, RuntimeError) and str(exc).startswith("Worker secret is not configured:"):
         return str(exc)
     return f"{type(exc).__name__}: worker execution failed"
@@ -40,7 +40,7 @@ async def process_one(queue: RedisJobQueue | None = None, *, timeout_seconds: in
         request = TriggerRequest(secret=secret, **queued.model_dump(mode="python"))
         result = await trigger_event(request)
         await queue.mark_succeeded(job_id, result)
-    except Exception as exc:
+    except (RuntimeError, ValueError) as exc:
         await queue.mark_failed(job_id, _safe_failure(exc))
     return True
 
