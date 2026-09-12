@@ -26,5 +26,20 @@ jobs:
           python-version: "3.12"
       - name: Install Redis test dependencies
         run: pip install -e ".[dev,redis]"
+      - name: Start demo merchant
+        run: |
+          uvicorn examples.demo_receiver:app --host 127.0.0.1 --port 9000 > /tmp/paylab-demo.log 2>&1 &
+          python - <<'PY'
+          import time
+          import httpx
+          for _ in range(40):
+              try:
+                  if httpx.get("http://127.0.0.1:9000/", timeout=1).status_code == 200:
+                      break
+              except httpx.HTTPError:
+                  time.sleep(0.25)
+          else:
+              raise SystemExit("demo merchant did not start")
+          PY
       - name: Run Redis integration tests
-        run: pytest -q tests/test_redis_stream.py
+        run: pytest -q tests/test_redis_stream.py tests/test_redis_worker.py
