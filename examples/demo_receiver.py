@@ -14,6 +14,7 @@ app = FastAPI(title="PayLab Demo Merchant")
 PAYSTACK_SECRET = os.getenv("PAYSTACK_SECRET", "sk_test_paylab")
 STRIPE_SECRET = os.getenv("STRIPE_SECRET", "whsec_paylab")
 FLUTTERWAVE_SECRET = os.getenv("FLUTTERWAVE_SECRET", "flw_paylab")
+MONNIFY_SECRET = os.getenv("MONNIFY_SECRET", "monnify_paylab")
 
 received_counts: defaultdict[str, int] = defaultdict(int)
 side_effect_counts: defaultdict[str, int] = defaultdict(int)
@@ -55,6 +56,14 @@ def _accepted(event_id: str | None) -> dict[str, object]:
     }
 
 
+async def _finish_delivery(request: Request) -> dict[str, object]:
+    event_id = request.headers.get("x-paylab-event-id")
+    already_recorded = await apply_fault(request, event_id)
+    if already_recorded:
+        return {"accepted": True, "duplicate": False, "event_id": event_id}
+    return _accepted(event_id)
+
+
 @app.get("/")
 async def root() -> dict[str, str]:
     return {"status": "demo merchant listening"}
@@ -76,11 +85,7 @@ async def paystack_webhook(request: Request) -> dict[str, object]:
     expected = hmac.new(PAYSTACK_SECRET.encode(), body, hashlib.sha512).hexdigest()
     if not hmac.compare_digest(signature, expected):
         raise HTTPException(status_code=401, detail="Invalid Paystack signature")
-    event_id = request.headers.get("x-paylab-event-id")
-    already_recorded = await apply_fault(request, event_id)
-    if already_recorded:
-        return {"accepted": True, "duplicate": False, "event_id": event_id}
-    return _accepted(event_id)
+    return await _finish_delivery(request)
 
 
 @app.post("/webhooks/stripe")
@@ -95,11 +100,7 @@ async def stripe_webhook(request: Request) -> dict[str, object]:
     ).hexdigest()
     if not timestamp or not hmac.compare_digest(signature, expected):
         raise HTTPException(status_code=401, detail="Invalid Stripe signature")
-    event_id = request.headers.get("x-paylab-event-id")
-    already_recorded = await apply_fault(request, event_id)
-    if already_recorded:
-        return {"accepted": True, "duplicate": False, "event_id": event_id}
-    return _accepted(event_id)
+    return await _finish_delivery(request)
 
 
 @app.post("/webhooks/flutterwave")
@@ -110,8 +111,14 @@ async def flutterwave_webhook(request: Request) -> dict[str, object]:
     expected = base64.b64encode(digest).decode("ascii")
     if not hmac.compare_digest(signature, expected):
         raise HTTPException(status_code=401, detail="Invalid Flutterwave signature")
-    event_id = request.headers.get("x-paylab-event-id")
-    already_recorded = await apply_fault(request, event_id)
-    if already_recorded:
-        return {"accepted": True, "duplicate": False, "event_id": event_id}
-    return _accepted(event_id)
+    return await _finish_delivery(request)
+
+
+@app.post("/webhooks/monnify")
+async def monnify_webhook(request: Request) -> dict[str, object]:
+    body = await request.body()
+    signature = request.headers.get("monnify-signature", "")
+    expected = hmac.new(MONNIFY_SECRET.encode(), body, hashlib.sha512).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        raise HTTPException(status_code=401, detail="Invalid Monnify signature")
+    return await _finish_delivery(request)

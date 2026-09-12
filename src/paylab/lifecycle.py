@@ -14,6 +14,7 @@ DEFAULT_LIFECYCLES: dict[str, tuple[str, ...]] = {
     "paystack": ("charge.success", "refund.processed"),
     "stripe": ("payment_intent.succeeded", "charge.refunded"),
     "flutterwave": ("charge.completed", "refund.completed"),
+    "monnify": ("SUCCESSFUL_TRANSACTION", "SUCCESSFUL_REFUND"),
 }
 
 
