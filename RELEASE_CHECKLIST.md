@@ -25,9 +25,9 @@ This checklist is the final quality gate for the first coordinated public PayLab
 
 ## Release requirements
 
-- [ ] Package/runtime version changed from `0.5.0.dev0` to `0.5.0`.
-- [ ] README no longer labels v0.5 as preview.
-- [ ] CHANGELOG contains a final `0.5.0` section.
+- [x] Package/runtime version changed from `0.5.0.dev0` to `0.5.0`.
+- [x] README no longer labels v0.5 as preview.
+- [x] CHANGELOG contains a final `0.5.0` section.
 - [ ] Release branch passes the full GitHub gate set.
 - [ ] Release commit is merged into `main`.
 - [ ] The merged `main` commit passes the full gate set again.
