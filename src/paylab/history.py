@@ -5,9 +5,21 @@ import os
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from paylab.models import HistoryEvent, ProviderName, TriggerRequest, TriggerResponse
+
+
+class HistoryStore(Protocol):
+    """Storage contract shared by SQLite and PostgreSQL history backends."""
+
+    def record(self, request: TriggerRequest, response: TriggerResponse) -> None: ...
+
+    def list_events(
+        self, *, limit: int = 50, provider: ProviderName | None = None
+    ) -> list[HistoryEvent]: ...
+
+    def get_event(self, event_id: str) -> HistoryEvent | None: ...
 
 
 class EventHistory:
@@ -120,11 +132,39 @@ class EventHistory:
         )
 
 
-_history_store: EventHistory | None = None
+_history_store: HistoryStore | None = None
 
 
-def get_history_store() -> EventHistory:
+def _build_history_store() -> HistoryStore:
+    database_url = os.getenv("PAYLAB_DATABASE_URL", "").strip()
+    if not database_url:
+        return EventHistory()
+
+    if database_url.startswith(("postgresql://", "postgres://", "postgresql+psycopg://")):
+        try:
+            from paylab.postgres_history import PostgresEventHistory
+        except ModuleNotFoundError as exc:
+            if exc.name == "psycopg":
+                raise RuntimeError(
+                    "PostgreSQL history requires the optional dependency: "
+                    'pip install "paylab-dev[postgres]"'
+                ) from exc
+            raise
+        return PostgresEventHistory(database_url)
+
+    raise ValueError(
+        "PAYLAB_DATABASE_URL currently supports PostgreSQL URLs only "
+        "(postgresql://, postgres://, or postgresql+psycopg://)."
+    )
+
+
+def get_history_store() -> HistoryStore:
     global _history_store
     if _history_store is None:
-        _history_store = EventHistory()
+        _history_store = _build_history_store()
     return _history_store
+
+
+def _reset_history_store_for_tests() -> None:
+    global _history_store
+    _history_store = None

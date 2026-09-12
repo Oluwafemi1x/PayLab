@@ -22,9 +22,11 @@ PayLab is an open-source payment reliability and chaos-testing toolkit for devel
 
 > **Alpha:** Payloads are representative test fixtures. PayLab is not affiliated with Paystack, Stripe, or Flutterwave.
 
-## v0.5 preview: GitHub Action reliability gate
+## v0.5 preview
 
-PayLab can now run directly inside GitHub Actions and fail a workflow when a webhook integration falls below a configured reliability threshold. The Action runs the chaos engine directly, so you do **not** need to start the PayLab API server in CI.
+### GitHub Action reliability gate
+
+PayLab can run directly inside GitHub Actions and fail a workflow when a webhook integration falls below a configured reliability threshold. The Action runs the chaos engine directly, so you do **not** need to start the PayLab API server in CI.
 
 Your application or staging webhook endpoint must already be reachable from the GitHub Actions runner.
 
@@ -58,19 +60,33 @@ jobs:
         run: echo "PayLab score = ${{ steps.paylab.outputs.percentage }}%"
 ```
 
-The Action generates both `paylab-report.json` and `paylab-report.html` by default and exposes these outputs:
-
-- `score`
-- `max-score`
-- `percentage`
-- `grade`
-- `passed`
-- `json-report`
-- `html-report`
+The Action generates both `paylab-report.json` and `paylab-report.html` by default and exposes score, grade, percentage, pass/fail, and report-path outputs.
 
 Use `deep: "true"` only against local or staging endpoints that intentionally support PayLab's test-only fault protocol.
 
 `@main` is the preview channel while v0.5 is under development. A stable `v0.5.0` tag will be published after the full v0.5 milestone passes its release checks.
+
+### PostgreSQL history backend
+
+SQLite remains PayLab's zero-config default. For shared or longer-lived environments, install the optional PostgreSQL backend:
+
+```bash
+pip install -e ".[dev,postgres]"
+```
+
+Set a PostgreSQL URL before starting PayLab:
+
+```text
+PAYLAB_DATABASE_URL=postgresql://paylab:paylab@127.0.0.1:5432/paylab
+```
+
+`PAYLAB_DATABASE_URL` takes precedence over `PAYLAB_DB_PATH`. PostgreSQL stores event metadata and delivery attempts as `JSONB`, and uses the same history API as SQLite.
+
+Run PayLab plus PostgreSQL with Docker Compose:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
+```
 
 ## Install
 
@@ -163,13 +179,13 @@ paylab storm paystack charge.success http://127.0.0.1:9000/webhooks/paystack --s
 
 ## Persistent history
 
-By default, PayLab stores history at `~/.paylab/paylab.db`. Override with `PAYLAB_DB_PATH`.
+By default, PayLab stores history in SQLite at `~/.paylab/paylab.db`. Override that path with `PAYLAB_DB_PATH`, or configure PostgreSQL with `PAYLAB_DATABASE_URL`.
 
 ```powershell
 paylab history --provider paystack --limit 10
 ```
 
-PayLab deliberately does **not** persist webhook signing secrets or raw signed webhook bodies. Live WebSocket messages follow the same rule.
+PayLab deliberately does **not** persist webhook signing secrets or raw signed webhook bodies. This rule applies to both SQLite and PostgreSQL. Live WebSocket messages follow the same rule.
 
 ## REST API
 
@@ -185,8 +201,16 @@ WS   /v1/stream
 
 ## Docker
 
+SQLite/default:
+
 ```bash
 docker compose up --build
+```
+
+PostgreSQL:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
 ```
 
 ## Roadmap
@@ -194,7 +218,7 @@ docker compose up --build
 ### v0.5
 
 - [x] GitHub Action and CI reliability gates
-- [ ] PostgreSQL history backend with integration tests
+- [x] PostgreSQL history backend with integration tests
 - [ ] Redis-backed multi-process event streaming/workers
 - [ ] Community provider SDK
 - [ ] Additional provider adapters
@@ -206,6 +230,12 @@ docker compose up --build
 pip install -e ".[dev]"
 ruff check .
 pytest -q
+```
+
+PostgreSQL integration development:
+
+```bash
+pip install -e ".[dev,postgres]"
 ```
 
 ## Contributing

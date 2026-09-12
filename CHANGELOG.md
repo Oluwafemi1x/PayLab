@@ -8,6 +8,11 @@
 - Added automatic JSON and HTML reliability reports for CI runs.
 - Added a dedicated Action smoke workflow that tests the real composite Action against the bundled demo merchant.
 - Webhook signing secrets are passed to the Action through environment variables and are excluded from generated reports and outputs.
+- Added an optional PostgreSQL history backend selected with `PAYLAB_DATABASE_URL`.
+- Added native PostgreSQL `JSONB` storage for event metadata and delivery attempts.
+- Added PostgreSQL event upserts with `ON CONFLICT` while preserving SQLite as the zero-config default.
+- Added a real PostgreSQL service integration workflow that validates round trips, upserts, provider filtering, and backend selection.
+- Added a Docker Compose PostgreSQL override for local integration environments.
 
 ## 0.4.0
 
