@@ -9,7 +9,8 @@ from paylab.models import ProviderName, QueuedTriggerRequest, TriggerRequest
 
 
 def secret_env_name(provider: ProviderName) -> str:
-    return f"PAYLAB_{provider.upper()}_SECRET"
+    safe_provider = "".join(character if character.isalnum() else "_" for character in provider.upper())
+    return f"PAYLAB_{safe_provider}_SECRET"
 
 
 def resolve_provider_secret(provider: ProviderName) -> str:
