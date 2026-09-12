@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+
+- Added persistent SQLite event history without storing webhook secrets or raw signed payloads.
+- Added `GET /v1/history/events` and `GET /v1/history/events/{event_id}`.
+- Added `paylab history` for inspecting recent webhook simulations.
+- Added retry-on-timeout/HTTP-5xx behavior with configurable retry count, delay, and timeout.
+- Added `paylab storm` for rapid repeated delivery of one event ID.
+- Added opt-in `--deep` checkout chaos checks for fail-once and timeout-once recovery.
+- Added optional business-level idempotency probing through `--probe-url`.
+- Expanded the demo merchant with fault injection and a test-only idempotency probe.
+- Expanded automated tests from 12 to 19.
+
 ## 0.2.0
 
 - Added `paylab chaos checkout`.
