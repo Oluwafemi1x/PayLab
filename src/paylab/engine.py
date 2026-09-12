@@ -44,7 +44,7 @@ async def trigger_event(
         transport=transport,
     ) as client:
         for delivery_index in range(1, request.duplicate + 1):
-            for retry_index in range(0, request.retry_count + 1):
+            for retry_index in range(request.retry_count + 1):
                 attempt_number += 1
                 started = time.perf_counter()
                 status_code: int | None = None
