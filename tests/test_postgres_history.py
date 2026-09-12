@@ -5,11 +5,11 @@ from uuid import uuid4
 
 import pytest
 
-psycopg = pytest.importorskip("psycopg")
-
 import paylab.history as history_module
 from paylab.models import DeliveryAttempt, TriggerRequest, TriggerResponse
-from paylab.postgres_history import PostgresEventHistory
+
+postgres_history = pytest.importorskip("paylab.postgres_history")
+PostgresEventHistory = postgres_history.PostgresEventHistory
 
 
 DATABASE_URL = os.getenv("PAYLAB_TEST_POSTGRES_URL", "")
