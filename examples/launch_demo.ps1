@@ -52,6 +52,18 @@ function Wait-Endpoint([string]$Url, [string]$Name) {
     throw "$Name did not become ready at $Url"
 }
 
+function Test-DemoMerchantCompatibility {
+    try {
+        $payload = Invoke-RestMethod -Uri "$probeUrl`?event_id=paylab_demo_preflight" -Method Get -TimeoutSec 2
+        $hasDeliveries = $null -ne $payload.PSObject.Properties["deliveries_received"]
+        $hasSideEffects = $null -ne $payload.PSObject.Properties["side_effect_count"]
+        return ($hasDeliveries -and $hasSideEffects)
+    }
+    catch {
+        return $false
+    }
+}
+
 if (-not (Test-Path $python)) {
     throw "Missing .venv. From the repository root run: python -m venv .venv; .\.venv\Scripts\Activate.ps1; python -m pip install -e `".[dev]`""
 }
@@ -73,6 +85,11 @@ if (-not (Test-Endpoint $merchantUrl)) {
     Start-Process -FilePath $python -ArgumentList @("-m", "uvicorn", "examples.demo_receiver:app", "--port", "9000") -WorkingDirectory $repoRoot | Out-Null
 }
 Wait-Endpoint $merchantUrl "Demo merchant"
+
+if (-not (Test-DemoMerchantCompatibility)) {
+    throw "Port 9000 is serving a stale or incompatible demo merchant. Stop the process on port 9000, then rerun this script. Find it with: Get-NetTCPConnection -LocalPort 9000 -State Listen | Select-Object OwningProcess"
+}
+Write-Host "Demo merchant compatibility check passed: fault injection and idempotency probe are available."
 
 if (-not $SkipOpen) {
     Start-Process $dashboardUrl
